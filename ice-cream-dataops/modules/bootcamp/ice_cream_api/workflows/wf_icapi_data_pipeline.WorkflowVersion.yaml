@@ -1,0 +1,47 @@
+workflowExternalId: wf_icapi_data_pipeline
+version: "1"
+workflowDefinition:
+  description: Workflow version 1 for the Ice Cream API data pipeline
+  tasks:
+    - externalId: create_asset_hierarchy
+      type: transformation
+      name: Create Cognite Asset Hierarchy
+      description: Populates CogniteCore `CogniteAsset` instances for the Ice Cream Factory
+      parameters:
+        transformation:
+          externalId: create_asset_hierarchy
+          concurrencyPolicy: fail
+      retries: 3
+      timeout: 3600
+      onFailure: abortWorkflow
+
+    - externalId: contextualize_ts_assets
+      type: transformation
+      name: Contextualize Time Series to Assets
+      description: Links CogniteCore `CogniteTimeSeries` to the created assets
+      parameters:
+        transformation:
+          externalId: contextualize_ts_assets
+          concurrencyPolicy: fail
+      dependsOn:
+        - externalId: create_asset_hierarchy
+      retries: 3
+      timeout: 3600
+      onFailure: abortWorkflow
+
+    - externalId: extract_icapi_datapoints
+      type: function
+      name: Extract ICAPI datapoints
+      description: Pulls datapoints from the Ice Cream Factory API and inserts into CDF time series
+      parameters:
+        function:
+          externalId: icapi_datapoints_extractor
+          data:
+            hours: 1
+            backfill: true
+        isAsyncComplete: false
+      dependsOn:
+        - externalId: contextualize_ts_assets
+      retries: 3
+      timeout: 7200
+      onFailure: abortWorkflow

@@ -1,0 +1,7 @@
+# Transformation schedules use UNIX cron format: minute hour day-of-month month day-of-week
+# Bootcamp project is "70" (from `cdf-bootcamp-70-test`), but cron minutes must be 0-59,
+# so we use 70 % 60 = 10 to keep the schedule valid while still deriving it from the project number.
+externalId: create_asset_hierarchy
+interval: "10 0 * * *"
+isPaused: false
+
